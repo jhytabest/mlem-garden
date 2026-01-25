@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { get } from 'svelte/store';
 	import Shober from './Shober.svelte';
 	import ChatBox from './ChatBox.svelte';
 	import type { ShoberData } from '$lib/shober/types';
@@ -30,8 +31,12 @@
 		// Load shobers from API
 		await loadShobers();
 
+		// Find my shober
+		const allShobers = get(shobers);
+		const myShober = allShobers.find(s => s.userId === user.id);
+
 		// Connect to real-time WebSocket
-		gardenWS.connect();
+		gardenWS.connect(user.id, myShober?.id);
 
 		// Listen for interaction events
 		window.addEventListener('garden-interaction', handleInteractionEvent as EventListener);
@@ -411,8 +416,9 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 4px;
-		transition: transform 0.2s ease;
+		transition: transform 0.2s ease, left 0.2s linear, top 0.2s linear;
 		opacity: 0.85;
+		will-change: left, top;
 	}
 
 	.shober-wrapper.online {
@@ -421,6 +427,7 @@
 
 	.shober-wrapper.own {
 		cursor: default;
+		transition: transform 0.2s ease; /* No position smoothing for own shober */
 	}
 
 	.shober-wrapper:hover {

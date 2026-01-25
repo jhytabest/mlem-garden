@@ -28,15 +28,26 @@ class GardenWebSocket {
 	private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 	private reconnectAttempts = 0;
 	private maxReconnectAttempts = 5;
+	private userId: string | null = null;
+	private shoberId: string | null = null;
 
-	connect() {
+	connect(userId?: string, shoberId?: string) {
 		if (!browser) return;
 		if (this.ws?.readyState === WebSocket.OPEN) return;
+
+		// Update credentials if provided
+		if (userId) this.userId = userId;
+		if (shoberId !== undefined) this.shoberId = shoberId;
+
+		if (!this.userId) {
+			console.error('Cannot connect to Garden: No userId provided');
+			return;
+		}
 
 		connectionState.set('connecting');
 
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-		const wsUrl = `${protocol}//${window.location.host}/api/garden/ws`;
+		const wsUrl = `${protocol}//${window.location.host}/api/garden/ws?userId=${encodeURIComponent(this.userId)}${this.shoberId ? `&shoberId=${encodeURIComponent(this.shoberId)}` : ''}`;
 
 		this.ws = new WebSocket(wsUrl);
 
