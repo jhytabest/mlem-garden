@@ -55,7 +55,7 @@ export const GET: RequestHandler = async ({ url, cookies, platform }) => {
 		if (!tokenResponse.ok) {
 			const errorData = await tokenResponse.text();
 			console.error('Token exchange failed:', errorData);
-			return new Response(`Google Token Error: ${tokenResponse.status} \nDetails: ${errorData}`, { status: 400 });
+			redirect(302, '/login?error=Authentication+failed');
 		}
 
 		const tokens: GoogleTokenResponse = await tokenResponse.json();
@@ -66,8 +66,7 @@ export const GET: RequestHandler = async ({ url, cookies, platform }) => {
 		});
 
 		if (!userInfoResponse.ok) {
-            const errorText = await userInfoResponse.text();
-			return new Response(`User Info Error: ${userInfoResponse.status} \nDetails: ${errorText}`, { status: 400 });
+			redirect(302, '/login?error=Failed+to+get+user+info');
 		}
 
 		const googleUser: GoogleUserInfo = await userInfoResponse.json();
