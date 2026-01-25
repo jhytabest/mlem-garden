@@ -1,4 +1,5 @@
 import { writable, derived } from 'svelte/store';
+import { browser } from '$app/environment';
 import type { ShoberData } from '$lib/shober/types';
 
 // Store for all shobers in the garden
@@ -18,6 +19,7 @@ class GardenWebSocket {
 	private maxReconnectAttempts = 5;
 
 	connect() {
+		if (!browser) return;
 		if (this.ws?.readyState === WebSocket.OPEN) return;
 
 		connectionState.set('connecting');
@@ -126,11 +128,13 @@ class GardenWebSocket {
 			case 'gift':
 			case 'emoji':
 				// Emit custom event for animation handling
-				window.dispatchEvent(
-					new CustomEvent('garden-interaction', {
-						detail: message
-					})
-				);
+				if (browser) {
+					window.dispatchEvent(
+						new CustomEvent('garden-interaction', {
+							detail: message
+						})
+					);
+				}
 				break;
 
 			case 'sync':
