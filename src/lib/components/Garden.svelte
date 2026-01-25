@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import Shober from './Shober.svelte';
+	import ChatBox from './ChatBox.svelte';
 	import type { ShoberData } from '$lib/shober/types';
 	import { shobers, gardenWS, loadShobers, connectionState, connectedUsers } from '$lib/stores/garden';
 
@@ -299,6 +300,8 @@
 			</div>
 		{/if}
 	</div>
+
+	<ChatBox userId={user.id} />
 
 	<footer class="garden-footer">
 		<p>{$shobers.length} shobers in the garden • {$connectedUsers.size} online</p>

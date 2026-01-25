@@ -8,7 +8,7 @@ interface Session {
 }
 
 interface GardenMessage {
-	type: 'join' | 'leave' | 'move' | 'pet' | 'gift' | 'emoji' | 'sync';
+	type: 'join' | 'leave' | 'move' | 'pet' | 'gift' | 'emoji' | 'sync' | 'chat';
 	userId?: string;
 	shoberId?: string;
 	data?: Record<string, unknown>;
@@ -101,6 +101,21 @@ export class GardenRoom extends DurableObject {
 							userId: session.userId,
 							shoberId: data.shoberId,
 							data: data.data
+						},
+						ws
+					);
+					break;
+
+				case 'chat':
+					this.broadcast(
+						{
+							type: 'chat',
+							userId: session.userId,
+							shoberId: session.shoberId,
+							data: {
+								...data.data,
+								timestamp: Date.now()
+							}
 						},
 						ws
 					);

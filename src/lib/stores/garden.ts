@@ -2,8 +2,19 @@ import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { ShoberData } from '$lib/shober/types';
 
+export interface ChatMessage {
+	id: string;
+	userId: string;
+	shoberId?: string;
+	text: string;
+	timestamp: number;
+}
+
 // Store for all shobers in the garden
 export const shobers = writable<ShoberData[]>([]);
+
+// Store for chat messages
+export const chatMessages = writable<ChatMessage[]>([]);
 
 // Store for connected users (online indicators)
 export const connectedUsers = writable<Set<string>>(new Set());
@@ -137,6 +148,19 @@ class GardenWebSocket {
 				}
 				break;
 
+			case 'chat':
+				if (message.userId && message.data?.text) {
+					const chatMsg: ChatMessage = {
+						id: crypto.randomUUID(),
+						userId: message.userId,
+						shoberId: message.shoberId,
+						text: message.data.text as string,
+						timestamp: (message.data.timestamp as number) || Date.now()
+					};
+					chatMessages.update((msgs) => [...msgs, chatMsg].slice(-50)); // Keep last 50
+				}
+				break;
+
 			case 'sync':
 				if (message.data?.connectedUsers) {
 					connectedUsers.set(
@@ -176,6 +200,11 @@ class GardenWebSocket {
 	// Send interaction
 	interact(type: 'pet' | 'gift' | 'emoji', shoberId: string, data?: Record<string, unknown>) {
 		this.send({ type, shoberId, data });
+	}
+
+	// Send chat message
+	sendChat(text: string) {
+		this.send({ type: 'chat', data: { text } });
 	}
 }
 
