@@ -296,7 +296,7 @@
 
 	async function handleBaby() {
 		if (!selectedShober) return;
-		
+
 		const myShober = $shobers.find(s => s.userId === user.id);
 		if (!myShober) return;
 
@@ -309,15 +309,38 @@
 				body: JSON.stringify({
 					shoberId: selectedShober.id,
 					type: 'baby',
-					data: { babyConfig } // Send config just in case we want to log it
+					data: { babyConfig }
 				})
 			});
 
 			if (response.ok) {
 				// Broadcast via WebSocket
 				gardenWS.interact('baby', selectedShober.id, { babyConfig });
-				
-				// Animation handled by event listener
+
+				// Spawn baby locally (sender doesn't receive their own broadcast)
+				const baby: Baby = {
+					id: crypto.randomUUID(),
+					x: selectedShober.positionX,
+					y: selectedShober.positionY,
+					vx: (Math.random() - 0.5) * 0.5,
+					vy: (Math.random() - 0.5) * 0.5,
+					config: babyConfig,
+					state: 'wandering',
+					spawnTime: Date.now()
+				};
+				babies = [...babies, baby];
+
+				// Show birth animation
+				interactionAnimation = {
+					shoberId: selectedShober.id,
+					type: 'baby',
+					x: selectedShober.positionX,
+					y: selectedShober.positionY
+				};
+
+				setTimeout(() => {
+					interactionAnimation = null;
+				}, 1500);
 			}
 		} catch (e) {
 			console.error('Failed to make baby:', e);
