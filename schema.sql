@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS interactions (
   id TEXT PRIMARY KEY,
   from_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   to_shober_id TEXT NOT NULL REFERENCES shobers(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK(type IN ('pet', 'gift', 'emoji')),
+  type TEXT NOT NULL CHECK(type IN ('pet', 'gift', 'emoji', 'baby')),
   data TEXT, -- JSON: emoji type, gift type, etc.
   created_at TEXT DEFAULT (datetime('now'))
 );
