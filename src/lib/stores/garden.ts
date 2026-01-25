@@ -149,6 +149,7 @@ class GardenWebSocket {
 			case 'pet':
 			case 'gift':
 			case 'emoji':
+			case 'baby':
 				// Emit custom event for animation handling
 				if (browser) {
 					window.dispatchEvent(
@@ -225,7 +226,7 @@ class GardenWebSocket {
 	}
 
 	// Send interaction
-	interact(type: 'pet' | 'gift' | 'emoji', shoberId: string, data?: Record<string, unknown>) {
+	interact(type: 'pet' | 'gift' | 'emoji' | 'baby', shoberId: string, data?: Record<string, unknown>) {
 		this.send({ type, shoberId, data });
 	}
 
