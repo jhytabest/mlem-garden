@@ -1,13 +1,21 @@
 <script lang="ts">
 	import Garden from '$lib/components/Garden.svelte';
 	import type { PageData } from './$types';
+	import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	let mounted = $state(false);
+	onMount(() => {
+		mounted = true;
+	});
 </script>
 
 <main class="home">
-	{#if data.user}
+	{#if data.user && mounted}
 		<Garden user={data.user} />
+	{:else if data.user}
+		<div class="loading">Loading Garden...</div>
 	{:else}
 		<section class="hero">
 			<div class="hero-content">
