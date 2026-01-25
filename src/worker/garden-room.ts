@@ -8,7 +8,7 @@ interface Session {
 }
 
 interface GardenMessage {
-	type: 'join' | 'leave' | 'move' | 'pet' | 'gift' | 'emoji' | 'sync' | 'chat';
+	type: 'join' | 'leave' | 'move' | 'pet' | 'gift' | 'emoji' | 'baby' | 'sync' | 'chat';
 	userId?: string;
 	shoberId?: string;
 	data?: Record<string, unknown>;
@@ -118,6 +118,7 @@ export class GardenRoom extends DurableObject {
 				case 'pet':
 				case 'gift':
 				case 'emoji':
+				case 'baby':
 					// Interaction with another shober
 					this.broadcast(
 						{
