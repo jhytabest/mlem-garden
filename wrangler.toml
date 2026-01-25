@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "mlem-garden-db"
-database_id = "a965f8a8-9b5e-4e0d-a031-af64772107c9"
+database_id = "02cb6401-acf1-4368-8cea-4684338f466c"
 
 # KV Namespace for sessions
 [[kv_namespaces]]
