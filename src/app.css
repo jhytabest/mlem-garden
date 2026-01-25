@@ -1,0 +1,93 @@
+:root {
+	--color-bg: #fef9f3;
+	--color-bg-garden: #c8e6c9;
+	--color-primary: #ff9800;
+	--color-primary-dark: #f57c00;
+	--color-secondary: #8bc34a;
+	--color-text: #3e2723;
+	--color-text-light: #6d4c41;
+	--color-white: #ffffff;
+	--color-shadow: rgba(0, 0, 0, 0.1);
+
+	--font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+	--border-radius: 12px;
+	--border-radius-lg: 20px;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	font-family: var(--font-family);
+	background-color: var(--color-bg);
+	color: var(--color-text);
+	line-height: 1.6;
+}
+
+button {
+	font-family: inherit;
+	cursor: pointer;
+	border: none;
+	border-radius: var(--border-radius);
+	padding: 12px 24px;
+	font-size: 1rem;
+	font-weight: 600;
+	transition: all 0.2s ease;
+}
+
+button:hover {
+	transform: translateY(-2px);
+}
+
+button:active {
+	transform: translateY(0);
+}
+
+.btn-primary {
+	background-color: var(--color-primary);
+	color: var(--color-white);
+	box-shadow: 0 4px 12px var(--color-shadow);
+}
+
+.btn-primary:hover {
+	background-color: var(--color-primary-dark);
+}
+
+.btn-secondary {
+	background-color: var(--color-secondary);
+	color: var(--color-white);
+}
+
+a {
+	color: var(--color-primary-dark);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+/* Utility classes */
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 20px;
+}
+
+.text-center {
+	text-align: center;
+}
+
+.flex-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
