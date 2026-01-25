@@ -11,7 +11,7 @@ database_id = "02cb6401-acf1-4368-8cea-4684338f466c"
 
 # KV Namespace for sessions
 [[kv_namespaces]]
-binding = "mlem_garden_sessions"
+binding = "SESSIONS"
 id = "3b183d35af084128810a32be79c8c69e"
 
 # Durable Objects for real-time garden (from separate worker)
