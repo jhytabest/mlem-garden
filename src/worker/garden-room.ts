@@ -17,6 +17,23 @@ interface GardenMessage {
 export class GardenRoom extends DurableObject {
 	sessions: Map<WebSocket, Session> = new Map();
 	shoberStates: Map<string, { x: number; y: number }> = new Map();
+	chatHistory: { userId: string; shoberId?: string; data: Record<string, unknown>; timestamp: number }[] = [];
+
+	constructor(ctx: DurableObjectState, env: any) {
+		super(ctx, env);
+		// Restore state from storage
+		this.ctx.blockConcurrencyWhile(async () => {
+			const storedStates = await this.ctx.storage.get<Record<string, { x: number; y: number }>>('shoberStates');
+			if (storedStates) {
+				this.shoberStates = new Map(Object.entries(storedStates));
+			}
+
+			const storedChat = await this.ctx.storage.get<{ userId: string; shoberId?: string; data: Record<string, unknown>; timestamp: number }[]>('chatHistory');
+			if (storedChat) {
+				this.chatHistory = storedChat;
+			}
+		});
+	}
 
 	async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
@@ -77,6 +94,13 @@ export class GardenRoom extends DurableObject {
 							x: data.data.x as number,
 							y: data.data.y as number
 						});
+						// Persist state (throttled/debounced in a real app, but directly here for simplicity or maybe save periodically)
+						// For now, let's save it. Cloudflare storage is fast.
+						// To avoid too many writes, maybe we only save periodically? 
+						// But for now, direct write is safest for "persistence".
+						// Converting Map to Object for storage
+						const statesObj = Object.fromEntries(this.shoberStates);
+						this.ctx.storage.put('shoberStates', statesObj);
 					}
 
 					// User moved their shober
@@ -107,15 +131,31 @@ export class GardenRoom extends DurableObject {
 					break;
 
 				case 'chat':
+					const chatMsg = {
+						userId: session.userId,
+						shoberId: session.shoberId,
+						data: {
+							...data.data,
+							text: (data.data as any)?.text // Ensure text is preserved
+						},
+						timestamp: Date.now()
+					};
+
+					// Add to history
+					this.chatHistory.push(chatMsg);
+					if (this.chatHistory.length > 50) {
+						this.chatHistory.shift();
+					}
+					
+					// Persist history
+					this.ctx.storage.put('chatHistory', this.chatHistory);
+
 					this.broadcast(
 						{
 							type: 'chat',
 							userId: session.userId,
 							shoberId: session.shoberId,
-							data: {
-								...data.data,
-								timestamp: Date.now()
-							}
+							data: chatMsg.data
 						},
 						ws
 					);
@@ -136,7 +176,11 @@ export class GardenRoom extends DurableObject {
 					ws.send(
 						JSON.stringify({
 							type: 'sync',
-							data: { connectedUsers, states }
+							data: { 
+								connectedUsers, 
+								states,
+								chatHistory: this.chatHistory // Send history
+							}
 						})
 					);
 					break;

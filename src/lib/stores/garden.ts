@@ -193,6 +193,22 @@ class GardenWebSocket {
 						})
 					);
 				}
+				if (message.data?.chatHistory) {
+					const history = message.data.chatHistory as {
+						userId: string;
+						shoberId?: string;
+						data: { text: string };
+						timestamp: number;
+					}[];
+					const msgs: ChatMessage[] = history.map((h) => ({
+						id: crypto.randomUUID(),
+						userId: h.userId,
+						shoberId: h.shoberId,
+						text: h.data?.text || '',
+						timestamp: h.timestamp
+					}));
+					chatMessages.set(msgs);
+				}
 				break;
 		}
 	}
