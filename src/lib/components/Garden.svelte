@@ -24,15 +24,15 @@
 		// Load shobers from API
 		await loadShobers();
 
-		// WebSocket disabled for now - real-time will be added later
-		// gardenWS.connect();
+		// Connect to real-time WebSocket
+		gardenWS.connect();
 
 		// Listen for interaction events
 		window.addEventListener('garden-interaction', handleInteractionEvent as EventListener);
 	});
 
 	onDestroy(() => {
-		// gardenWS.disconnect();
+		gardenWS.disconnect();
 		window.removeEventListener('garden-interaction', handleInteractionEvent as EventListener);
 	});
 
@@ -78,8 +78,8 @@
 			});
 
 			if (response.ok) {
-				// WebSocket disabled for now
-				// gardenWS.interact('pet', selectedShober.id);
+				// Broadcast via WebSocket
+				gardenWS.interact('pet', selectedShober.id);
 
 				// Show local animation
 				interactionAnimation = {
@@ -115,8 +115,8 @@
 			});
 
 			if (response.ok) {
-				// WebSocket disabled for now
-				// gardenWS.interact('gift', selectedShober.id, { giftType });
+				// Broadcast via WebSocket
+				gardenWS.interact('gift', selectedShober.id, { giftType });
 
 				interactionAnimation = {
 					shoberId: selectedShober.id,

@@ -15,7 +15,7 @@ declare global {
 			env: {
 				DB: D1Database;
 				SESSIONS: KVNamespace;
-				GARDEN_ROOM?: DurableObjectNamespace; // Optional - will be added later for real-time
+				GARDEN_ROOM: DurableObjectNamespace;
 				GOOGLE_CLIENT_ID: string;
 				GOOGLE_CLIENT_SECRET: string;
 			};

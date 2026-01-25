@@ -1,0 +1,13 @@
+name = "mlem-garden-realtime"
+main = "src/worker/realtime.ts"
+compatibility_date = "2025-01-20"
+compatibility_flags = ["nodejs_compat"]
+
+# Durable Objects
+[[durable_objects.bindings]]
+name = "GARDEN_ROOM"
+class_name = "GardenRoom"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["GardenRoom"]

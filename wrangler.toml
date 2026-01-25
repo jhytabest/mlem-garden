@@ -1,7 +1,7 @@
 name = "mlem-garden"
+main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_date = "2025-01-20"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".svelte-kit/cloudflare"
 
 # D1 Database binding
 [[d1_databases]]
@@ -14,14 +14,16 @@ database_id = "a965f8a8-9b5e-4e0d-a031-af64772107c9"
 binding = "SESSIONS"
 id = "23e4add6fcaa4a9a898aae25ab707093"
 
-# Durable Objects for real-time garden
-# NOTE: For Pages, Durable Objects need to be in a separate Worker
-# Real-time features will be added in a follow-up deployment
-# [[durable_objects.bindings]]
-# name = "GARDEN_ROOM"
-# class_name = "GardenRoom"
-# script_name = "mlem-garden-realtime"
+# Durable Objects for real-time garden (from separate worker)
+[[durable_objects.bindings]]
+name = "GARDEN_ROOM"
+class_name = "GardenRoom"
+script_name = "mlem-garden-realtime"
+
+# Static assets
+[assets]
+directory = ".svelte-kit/cloudflare"
 
 # Environment variables are set as secrets via:
-# wrangler pages secret put GOOGLE_CLIENT_ID
-# wrangler pages secret put GOOGLE_CLIENT_SECRET
+# wrangler secret put GOOGLE_CLIENT_ID
+# wrangler secret put GOOGLE_CLIENT_SECRET
