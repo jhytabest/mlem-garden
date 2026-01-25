@@ -1,9 +1,4 @@
 import type { ShoberConfig } from './types';
-import { SHOBER_COLORS, EYE_STYLES, ACCESSORIES, ACCESSORY_COLORS } from './types';
-
-function pickRandom<T>(arr: readonly T[]): T {
-	return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export function mixConfigs(parent1: ShoberConfig, parent2: ShoberConfig): ShoberConfig {
 	// 50/50 chance for each trait from either parent

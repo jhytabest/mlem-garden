@@ -8,9 +8,6 @@
 	}
 
 	let { config, size = 100, animated = false }: Props = $props();
-
-	// Calculate scaled dimensions
-	const scale = size / 100;
 </script>
 
 <svg
@@ -93,11 +90,11 @@
 		<polygon points="50,58 40,52 40,64 50,58 60,52 60,64" fill={config.accessoryColor} />
 		<circle cx="50" cy="58" r="3" fill={config.accessoryColor} />
 	{:else if config.accessory === 'glasses'}
-		<circle cx="42" cy="38" r="8" fill="none" stroke={config.accessoryColor} stroke-width="2" />
-		<circle cx="58" cy="38" r="8" fill="none" stroke={config.accessoryColor} stroke-width="2" />
-		<line x1="50" y1="38" x2="50" y2="38" stroke={config.accessoryColor} stroke-width="2" />
-		<line x1="34" y1="38" x2="28" y2="35" stroke={config.accessoryColor} stroke-width="2" />
-		<line x1="66" y1="38" x2="72" y2="35" stroke={config.accessoryColor} stroke-width="2" />
+		<circle cx="42" cy="38" r="7" fill="none" stroke={config.accessoryColor} stroke-width="2" />
+		<circle cx="58" cy="38" r="7" fill="none" stroke={config.accessoryColor} stroke-width="2" />
+		<line x1="49" y1="38" x2="51" y2="38" stroke={config.accessoryColor} stroke-width="2" />
+		<line x1="35" y1="38" x2="28" y2="35" stroke={config.accessoryColor} stroke-width="2" />
+		<line x1="65" y1="38" x2="72" y2="35" stroke={config.accessoryColor} stroke-width="2" />
 	{:else if config.accessory === 'collar'}
 		<ellipse cx="50" cy="58" rx="22" ry="5" fill={config.accessoryColor} />
 		<circle cx="50" cy="62" r="4" fill="gold" />

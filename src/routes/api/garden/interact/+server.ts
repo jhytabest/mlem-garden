@@ -3,10 +3,11 @@ import type { RequestHandler } from './$types';
 
 interface InteractionRequest {
 	shoberId: string;
-	type: 'pet' | 'gift' | 'emoji';
+	type: 'pet' | 'gift' | 'emoji' | 'baby';
 	data?: {
 		giftType?: string;
 		emojiType?: string;
+		babyConfig?: unknown;
 	};
 }
 

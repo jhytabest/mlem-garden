@@ -132,12 +132,18 @@ export class GardenRoom extends DurableObject {
 					break;
 
 				case 'chat':
+					// Validate chat message
+					const text = (data.data as any)?.text;
+					if (typeof text !== 'string' || text.length === 0 || text.length > 200) {
+						return; // Ignore invalid messages
+					}
+
 					const chatMsg = {
 						userId: session.userId,
 						shoberId: session.shoberId,
 						data: {
 							...data.data,
-							text: (data.data as any)?.text // Ensure text is preserved
+							text: text.slice(0, 200) // Ensure max 200 chars
 						},
 						timestamp: Date.now()
 					};
