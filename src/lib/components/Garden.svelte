@@ -3,7 +3,8 @@
 	import { get } from 'svelte/store';
 	import Shober from './Shober.svelte';
 	import ChatBox from './ChatBox.svelte';
-	import type { ShoberData } from '$lib/shober/types';
+	import type { ShoberData, ShoberConfig } from '$lib/shober/types';
+	import { mixConfigs } from '$lib/shober/genetics';
 	import { shobers, gardenWS, loadShobers, connectionState, connectedUsers } from '$lib/stores/garden';
 
 	interface User {
@@ -11,6 +12,17 @@
 		email: string;
 		displayName: string | null;
 		avatarUrl: string | null;
+	}
+
+	interface Baby {
+		id: string;
+		x: number;
+		y: number;
+		vx: number;
+		vy: number;
+		config: ShoberConfig;
+		state: 'wandering' | 'leaving';
+		spawnTime: number;
 	}
 
 	interface Props {
@@ -21,6 +33,7 @@
 
 	let selectedShober = $state<ShoberData | null>(null);
 	let interactionAnimation = $state<{ shoberId: string; type: string; x: number; y: number } | null>(null);
+	let babies = $state<Baby[]>([]);
 	
 	// Movement state
 	let activeKeys = new Set<string>();
@@ -68,7 +81,55 @@
 		activeKeys.delete(e.key.toLowerCase());
 	}
 
+	function updateBabies() {
+		const now = Date.now();
+		babies = babies.filter(baby => {
+			// Update position
+			baby.x += baby.vx;
+			baby.y += baby.vy;
+
+			// Logic
+			const age = now - baby.spawnTime;
+
+			if (baby.state === 'wandering') {
+				// Change direction randomly
+				if (Math.random() < 0.05) {
+					baby.vx += (Math.random() - 0.5) * 0.1;
+					baby.vy += (Math.random() - 0.5) * 0.1;
+				}
+				// Friction
+				baby.vx *= 0.99;
+				baby.vy *= 0.99;
+
+				// Keep somewhat near center or bounce? Let's just wander.
+				
+				// Switch to leaving after 5-8 seconds
+				if (age > 5000 + Math.random() * 3000) {
+					baby.state = 'leaving';
+					// Pick a direction away from center (50, 50)
+					const dx = baby.x - 50;
+					const dy = baby.y - 50;
+					const mag = Math.sqrt(dx * dx + dy * dy) || 1;
+					baby.vx = (dx / mag) * 0.5;
+					baby.vy = (dy / mag) * 0.5;
+				}
+			} else if (baby.state === 'leaving') {
+				// Accelerate slightly
+				baby.vx *= 1.05;
+				baby.vy *= 1.05;
+			}
+
+			// Remove if far off screen
+			if (baby.x < -20 || baby.x > 120 || baby.y < -20 || baby.y > 120) {
+				return false;
+			}
+			return true;
+		});
+	}
+
 	function updateMovement() {
+		updateBabies();
+
 		if (activeKeys.size > 0) {
 			const myShober = $shobers.find((s) => s.userId === user.id);
 			if (myShober) {
@@ -111,17 +172,40 @@
 	}
 
 	function handleInteractionEvent(event: CustomEvent) {
-		const { type, shoberId } = event.detail;
+		const { type, shoberId, data } = event.detail;
 
 		// Find shober position for animation
 		const shober = $shobers.find(s => s.id === shoberId);
 		if (shober) {
-			interactionAnimation = {
-				shoberId,
-				type,
-				x: shober.positionX,
-				y: shober.positionY
-			};
+			if (type === 'baby' && data?.babyConfig) {
+				// Spawn a baby!
+				const baby: Baby = {
+					id: crypto.randomUUID(),
+					x: shober.positionX,
+					y: shober.positionY,
+					vx: (Math.random() - 0.5) * 0.5,
+					vy: (Math.random() - 0.5) * 0.5,
+					config: data.babyConfig as ShoberConfig,
+					state: 'wandering',
+					spawnTime: Date.now()
+				};
+				babies.push(baby);
+				
+				// Interaction effect for the birth
+				interactionAnimation = {
+					shoberId,
+					type: 'baby',
+					x: shober.positionX,
+					y: shober.positionY
+				};
+			} else {
+				interactionAnimation = {
+					shoberId,
+					type,
+					x: shober.positionX,
+					y: shober.positionY
+				};
+			}
 
 			// Clear animation after delay
 			setTimeout(() => {
@@ -210,6 +294,38 @@
 		selectedShober = null;
 	}
 
+	async function handleBaby() {
+		if (!selectedShober) return;
+		
+		const myShober = $shobers.find(s => s.userId === user.id);
+		if (!myShober) return;
+
+		const babyConfig = mixConfigs(myShober.config, selectedShober.config);
+
+		try {
+			const response = await fetch('/api/garden/interact', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					shoberId: selectedShober.id,
+					type: 'baby',
+					data: { babyConfig } // Send config just in case we want to log it
+				})
+			});
+
+			if (response.ok) {
+				// Broadcast via WebSocket
+				gardenWS.interact('baby', selectedShober.id, { babyConfig });
+				
+				// Animation handled by event listener
+			}
+		} catch (e) {
+			console.error('Failed to make baby:', e);
+		}
+
+		selectedShober = null;
+	}
+
 	function closeMenu() {
 		selectedShober = null;
 	}
@@ -244,6 +360,16 @@
 			<div class="tree tree-2">🌲</div>
 		</div>
 
+		<!-- Babies -->
+		{#each babies as baby (baby.id)}
+			<div
+				class="baby-wrapper"
+				style="left: {baby.x}%; top: {baby.y}%;"
+			>
+				<Shober config={baby.config} size={40} animated />
+			</div>
+		{/each}
+
 		<!-- Shobers -->
 		{#each $shobers as shober (shober.id)}
 			<button
@@ -276,6 +402,8 @@
 					💕
 				{:else if interactionAnimation.type === 'gift'}
 					🎁
+				{:else if interactionAnimation.type === 'baby'}
+					👶
 				{/if}
 			</div>
 		{/if}
@@ -295,6 +423,9 @@
 				<div class="menu-actions">
 					<button onclick={handlePet} class="action-btn pet-btn">
 						💕 Pet
+					</button>
+					<button onclick={handleBaby} class="action-btn baby-btn">
+						👶 Make Baby
 					</button>
 					<div class="gift-options">
 						<button onclick={() => handleGift('flower')} class="gift-btn" title="Flower">🌸</button>
@@ -513,6 +644,24 @@
 
 	.pet-btn:hover {
 		background: #ff4081;
+	}
+
+	.baby-btn {
+		background: #4fc3f7;
+		color: white;
+	}
+
+	.baby-btn:hover {
+		background: #039be5;
+	}
+
+	.baby-wrapper {
+		position: absolute;
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+		z-index: 5;
+		/* No transition for smooth random movement per frame, or small one? */
+		/* Linear transition matches the update frequency */
 	}
 
 	.gift-options {

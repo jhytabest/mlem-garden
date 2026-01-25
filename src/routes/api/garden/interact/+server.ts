@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		throw error(400, 'Missing shoberId or type');
 	}
 
-	if (!['pet', 'gift', 'emoji'].includes(body.type)) {
+	if (!['pet', 'gift', 'emoji', 'baby'].includes(body.type)) {
 		throw error(400, 'Invalid interaction type');
 	}
 
