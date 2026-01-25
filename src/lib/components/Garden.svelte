@@ -19,6 +19,11 @@
 
 	let selectedShober = $state<ShoberData | null>(null);
 	let interactionAnimation = $state<{ shoberId: string; type: string; x: number; y: number } | null>(null);
+	
+	// Movement state
+	let activeKeys = new Set<string>();
+	let lastUpdate = 0;
+	let animationFrame: number;
 
 	onMount(async () => {
 		// Load shobers from API
@@ -29,12 +34,75 @@
 
 		// Listen for interaction events
 		window.addEventListener('garden-interaction', handleInteractionEvent as EventListener);
+		
+		// Movement listeners
+		window.addEventListener('keydown', handleKeyDown);
+		window.addEventListener('keyup', handleKeyUp);
+		
+		// Start movement loop
+		updateMovement();
 	});
 
 	onDestroy(() => {
 		gardenWS.disconnect();
 		window.removeEventListener('garden-interaction', handleInteractionEvent as EventListener);
+		window.removeEventListener('keydown', handleKeyDown);
+		window.removeEventListener('keyup', handleKeyUp);
+		cancelAnimationFrame(animationFrame);
 	});
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.repeat) return;
+		// Don't move if typing in an input (though we don't have inputs yet)
+		if ((e.target as HTMLElement).tagName === 'INPUT') return;
+		activeKeys.add(e.key.toLowerCase());
+	}
+
+	function handleKeyUp(e: KeyboardEvent) {
+		activeKeys.delete(e.key.toLowerCase());
+	}
+
+	function updateMovement() {
+		if (activeKeys.size > 0) {
+			const myShober = $shobers.find((s) => s.userId === user.id);
+			if (myShober) {
+				let dx = 0;
+				let dy = 0;
+				const speed = 0.5; // percent per frame
+
+				if (activeKeys.has('w') || activeKeys.has('arrowup')) dy -= speed;
+				if (activeKeys.has('s') || activeKeys.has('arrowdown')) dy += speed;
+				if (activeKeys.has('a') || activeKeys.has('arrowleft')) dx -= speed;
+				if (activeKeys.has('d') || activeKeys.has('arrowright')) dx += speed;
+
+				if (dx !== 0 || dy !== 0) {
+					// Update locally
+					const newX = Math.max(0, Math.min(100, myShober.positionX + dx));
+					const newY = Math.max(0, Math.min(100, myShober.positionY + dy));
+
+					shobers.update((list) =>
+						list.map((s) =>
+							s.id === myShober.id
+								? {
+										...s,
+										positionX: newX,
+										positionY: newY
+									}
+								: s
+						)
+					);
+
+					// Throttle network updates
+					const now = Date.now();
+					if (now - lastUpdate > 50) {
+						gardenWS.moveShober(newX, newY);
+						lastUpdate = now;
+					}
+				}
+			}
+		}
+		animationFrame = requestAnimationFrame(updateMovement);
+	}
 
 	function handleInteractionEvent(event: CustomEvent) {
 		const { type, shoberId } = event.detail;

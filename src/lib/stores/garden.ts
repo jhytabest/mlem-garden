@@ -143,6 +143,21 @@ class GardenWebSocket {
 						new Set((message.data.connectedUsers as { userId: string }[]).map((u) => u.userId))
 					);
 				}
+				if (message.data?.states) {
+					const states = message.data.states as Record<string, { x: number; y: number }>;
+					shobers.update((list) =>
+						list.map((s) => {
+							if (states[s.id]) {
+								return {
+									...s,
+									positionX: states[s.id].x,
+									positionY: states[s.id].y
+								};
+							}
+							return s;
+						})
+					);
+				}
 				break;
 		}
 	}

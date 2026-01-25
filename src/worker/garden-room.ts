@@ -16,6 +16,7 @@ interface GardenMessage {
 
 export class GardenRoom extends DurableObject {
 	sessions: Map<WebSocket, Session> = new Map();
+	shoberStates: Map<string, { x: number; y: number }> = new Map();
 
 	async fetch(request: Request): Promise<Response> {
 		const url = new URL(request.url);
@@ -70,6 +71,14 @@ export class GardenRoom extends DurableObject {
 
 			switch (data.type) {
 				case 'move':
+					// Update state
+					if (session.shoberId && data.data) {
+						this.shoberStates.set(session.shoberId, {
+							x: data.data.x as number,
+							y: data.data.y as number
+						});
+					}
+
 					// User moved their shober
 					this.broadcast(
 						{
@@ -103,10 +112,16 @@ export class GardenRoom extends DurableObject {
 						.filter((s) => !s.quit)
 						.map((s) => ({ userId: s.userId, shoberId: s.shoberId }));
 
+					// Convert states map to object
+					const states: Record<string, { x: number; y: number }> = {};
+					for (const [id, pos] of this.shoberStates) {
+						states[id] = pos;
+					}
+
 					ws.send(
 						JSON.stringify({
 							type: 'sync',
-							data: { connectedUsers }
+							data: { connectedUsers, states }
 						})
 					);
 					break;
