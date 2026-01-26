@@ -43,7 +43,7 @@
 
 			const res = await fetch(`/api/marketplace?${params}`);
 			if (!res.ok) throw new Error('Failed to load marketplace');
-			const data = await res.json();
+			const data = await res.json() as { listings: MarketplaceListing[]; total: number };
 			listings = data.listings;
 			total = data.total;
 		} catch (e) {
@@ -55,7 +55,7 @@
 		try {
 			const res = await fetch('/api/wallet');
 			if (!res.ok) return;
-			const data = await res.json();
+			const data = await res.json() as { wallet: UserWallet };
 			wallet = data.wallet;
 		} catch (e) {
 			console.error('Failed to load wallet:', e);
@@ -92,7 +92,7 @@
 			});
 
 			if (!res.ok) {
-				const data = await res.json();
+				const data = await res.json() as { message?: string };
 				throw new Error(data.message || 'Purchase failed');
 			}
 
@@ -150,7 +150,7 @@
 			</div>
 
 			<div class="filter-group">
-				<label>Price Range</label>
+				<span class="label-text">Price Range</span>
 				<div class="price-range">
 					<input type="number" placeholder="Min" bind:value={minPrice} />
 					<span>-</span>
@@ -274,8 +274,22 @@
 
 <!-- Buy Modal -->
 {#if showBuyModal && selectedListing}
-	<div class="modal-overlay" onclick={() => (showBuyModal = false)}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-overlay"
+		role="button"
+		tabindex="0"
+		onclick={() => (showBuyModal = false)}
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter') showBuyModal = false;
+		}}
+	>
+		<div
+			class="modal"
+			role="button"
+			tabindex="0"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			<h2>Buy {selectedListing.shober.name}?</h2>
 
 			<div class="modal-preview">
@@ -404,7 +418,8 @@
 		margin-bottom: 20px;
 	}
 
-	.filter-group label {
+	.filter-group label,
+	.filter-group .label-text {
 		display: block;
 		margin-bottom: 8px;
 		font-weight: 600;
@@ -608,7 +623,7 @@
 		margin-bottom: 0;
 	}
 
-	.summary-row hr {
+	.purchase-summary hr {
 		width: 100%;
 		border: none;
 		border-top: 1px solid #ddd;

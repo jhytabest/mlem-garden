@@ -14,6 +14,7 @@ export const GET: RequestHandler = async ({ platform }) => {
       u.display_name as owner_name
      FROM shobers s
      JOIN users u ON s.user_id = u.id
+     WHERE s.is_active = 1
      ORDER BY s.created_at DESC
      LIMIT 100`
 	).all();

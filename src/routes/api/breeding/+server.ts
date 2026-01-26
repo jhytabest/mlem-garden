@@ -44,6 +44,8 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	const params =
 		type === 'all' ? [locals.user.id, locals.user.id] : [locals.user.id];
 
+	const currentUserId = locals.user.id;
+
 	const results = await platform.env.DB.prepare(query)
 		.bind(...params)
 		.all();
@@ -55,7 +57,7 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 		babyGoesTo: row.baby_goes_to,
 		createdAt: row.created_at,
 		expiresAt: row.expires_at,
-		isIncoming: row.target_user_id === locals.user.id,
+		isIncoming: row.target_user_id === currentUserId,
 		requester: {
 			userId: row.requester_user_id,
 			userName: row.requester_name,
@@ -89,7 +91,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		throw error(500, 'Server configuration error');
 	}
 
-	const body = await request.json();
+	const body = await request.json() as { shober1Id: string; shober2Id: string };
 	const { shober1Id, shober2Id } = body;
 
 	if (!shober1Id || !shober2Id) {

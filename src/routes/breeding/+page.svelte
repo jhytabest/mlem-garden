@@ -31,7 +31,7 @@
 		try {
 			const res = await fetch('/api/shobers');
 			if (!res.ok) throw new Error('Failed to load shobers');
-			const data = await res.json();
+			const data = await res.json() as { shobers: ShoberData[] };
 			shobers = data.shobers;
 		} catch (e) {
 			console.error(e);
@@ -42,7 +42,7 @@
 		try {
 			const res = await fetch('/api/wallet');
 			if (!res.ok) return;
-			const data = await res.json();
+			const data = await res.json() as { wallet: UserWallet };
 			wallet = data.wallet;
 		} catch (e) {
 			console.error(e);
@@ -101,11 +101,15 @@
 			});
 
 			if (!res.ok) {
-				const data = await res.json();
+				const data = await res.json() as { message?: string };
 				throw new Error(data.message || 'Breeding failed');
 			}
 
-			const data = await res.json();
+			const data = await res.json() as {
+				baby: ShoberData;
+				inheritedTraits: { baseColorFrom: string; eyeStyleFrom: string; accessoryFrom: string; hasMutation: boolean };
+				cost: number;
+			};
 			babyResult = {
 				baby: data.baby,
 				inheritedTraits: data.inheritedTraits,

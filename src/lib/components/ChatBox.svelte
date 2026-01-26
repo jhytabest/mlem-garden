@@ -10,7 +10,7 @@
 	let { userId }: Props = $props();
 
 	let chatInput = $state('');
-	let chatContainer: HTMLElement;
+	let chatContainer = $state<HTMLElement>();
 	let showChat = $state(true);
 
 	function handleSubmit(e: SubmitEvent) {

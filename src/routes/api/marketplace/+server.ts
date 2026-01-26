@@ -131,7 +131,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		throw error(500, 'Server configuration error');
 	}
 
-	const body = await request.json();
+	const body = await request.json() as { shoberId: string; price: number };
 	const { shoberId, price } = body;
 
 	if (!shoberId || !price) {

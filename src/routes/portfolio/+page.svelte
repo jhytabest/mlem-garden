@@ -23,7 +23,7 @@
 		try {
 			const res = await fetch('/api/shobers');
 			if (!res.ok) throw new Error('Failed to load shobers');
-			const data = await res.json();
+			const data = await res.json() as { shobers: ShoberData[] };
 			shobers = data.shobers;
 		} catch (e) {
 			error = (e as Error).message;
@@ -34,7 +34,7 @@
 		try {
 			const res = await fetch('/api/wallet');
 			if (!res.ok) throw new Error('Failed to load wallet');
-			const data = await res.json();
+			const data = await res.json() as { wallet: UserWallet };
 			wallet = data.wallet;
 		} catch (e) {
 			console.error('Failed to load wallet:', e);
@@ -75,7 +75,7 @@
 			});
 
 			if (!res.ok) {
-				const data = await res.json();
+				const data = await res.json() as { message?: string };
 				throw new Error(data.message || 'Failed to list');
 			}
 
@@ -95,8 +95,8 @@
 		try {
 			// We need to get the listing ID - for now, we'll use a direct approach
 			const res = await fetch(`/api/marketplace`);
-			const data = await res.json();
-			const listing = data.listings?.find((l: { shoberId: string }) => l.shoberId === shoberId);
+			const data = await res.json() as { listings?: { id: string; shoberId: string }[] };
+			const listing = data.listings?.find((l) => l.shoberId === shoberId);
 
 			if (listing) {
 				await fetch(`/api/marketplace/${listing.id}`, { method: 'DELETE' });
@@ -230,8 +230,22 @@
 
 <!-- List for Sale Modal -->
 {#if showListModal && selectedShober}
-	<div class="modal-overlay" onclick={() => (showListModal = false)}>
-		<div class="modal" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-overlay"
+		role="button"
+		tabindex="0"
+		onclick={() => (showListModal = false)}
+		onkeydown={(e) => {
+			if (e.key === 'Escape' || e.key === 'Enter') showListModal = false;
+		}}
+	>
+		<div
+			class="modal"
+			role="button"
+			tabindex="0"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+		>
 			<h2>List {selectedShober.name} for Sale</h2>
 
 			<div class="modal-preview">

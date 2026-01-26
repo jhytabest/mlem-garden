@@ -441,7 +441,15 @@
 
 		<!-- Interaction menu -->
 		{#if selectedShober}
-			<div class="interaction-overlay" onclick={closeMenu} role="button" tabindex="-1"></div>
+			<div
+				class="interaction-overlay"
+				onclick={closeMenu}
+				role="button"
+				tabindex="0"
+				onkeydown={(e) => {
+					if (e.key === 'Escape') closeMenu();
+				}}
+			></div>
 			<div
 				class="interaction-menu"
 				style="left: {selectedShober.positionX}%; top: {selectedShober.positionY - 15}%;"

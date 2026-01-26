@@ -114,7 +114,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals, platform 
 		throw error(403, 'Not your shober');
 	}
 
-	const body = await request.json();
+	const body = await request.json() as { name?: string; setActive?: boolean };
 	const updates: string[] = [];
 	const values: (string | number)[] = [];
 
