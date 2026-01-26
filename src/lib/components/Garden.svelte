@@ -5,6 +5,7 @@
 	import ChatBox from './ChatBox.svelte';
 	import type { ShoberData, ShoberConfig } from '$lib/shober/types';
 	import { mixConfigs } from '$lib/shober/genetics';
+	import { getRarityColor, getOverallRarity } from '$lib/shober/dna';
 	import { shobers, gardenWS, loadShobers, connectionState, connectedUsers } from '$lib/stores/garden';
 
 	interface User {
@@ -364,6 +365,8 @@
 		</div>
 		<div class="user-info">
 			<span>Welcome, {user.displayName || user.email}!</span>
+			<a href="/portfolio" class="btn-nav">My Shobers</a>
+			<a href="/marketplace" class="btn-nav">Marketplace</a>
 			<a href="/create" class="btn-primary">
 				{$shobers.some((s) => s.userId === user.id) ? 'Edit Shober' : 'Create Shober'}
 			</a>
@@ -406,6 +409,11 @@
 				<Shober config={shober.config} size={80} animated />
 				<span class="shober-name">
 					{shober.name}
+					{#if shober.generation !== undefined}
+						<span class="gen-badge" style="background: {getRarityColor(shober.rarityScore || 50)}">
+							G{shober.generation}
+						</span>
+					{/if}
 					{#if $connectedUsers.has(shober.userId)}
 						<span class="online-dot"></span>
 					{/if}
@@ -519,9 +527,22 @@
 	}
 
 	.user-info .btn-primary,
-	.user-info .btn-secondary {
+	.user-info .btn-secondary,
+	.user-info .btn-nav {
 		padding: 8px 16px;
 		font-size: 0.9rem;
+	}
+
+	.btn-nav {
+		background: var(--color-secondary);
+		color: white;
+		border-radius: var(--border-radius);
+		text-decoration: none;
+		transition: background 0.2s;
+	}
+
+	.btn-nav:hover {
+		background: #7b1fa2;
 	}
 
 	.garden {
@@ -607,6 +628,14 @@
 		background: #4caf50;
 		border-radius: 50%;
 		animation: pulse 2s infinite;
+	}
+
+	.gen-badge {
+		font-size: 0.65rem;
+		padding: 2px 6px;
+		border-radius: 8px;
+		color: white;
+		font-weight: 700;
 	}
 
 	@keyframes pulse {
