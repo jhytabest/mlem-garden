@@ -10,17 +10,25 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "deploy": "wrangler deploy",
     "deploy:realtime": "wrangler deploy --config wrangler.realtime.toml",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250121.0",
+    "@playwright/test": "^1.41.0",
     "@sveltejs/adapter-cloudflare": "^5.0.3",
     "@sveltejs/kit": "^2.15.2",
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@testing-library/svelte": "^5.0.0",
     "svelte": "^5.19.0",
     "svelte-check": "^4.1.4",
     "typescript": "^5.7.3",
     "vite": "^6.0.7",
+    "vitest": "^2.0.0",
     "wrangler": "^4.0.0"
   },
   "type": "module"
