@@ -162,14 +162,19 @@ class GardenWebSocket {
 
 			case 'chat':
 				if (message.userId && message.data?.text) {
+					// Sanitize: strip HTML tags and limit length
+					const rawText = String(message.data.text).slice(0, 200);
+					const sanitizedText = rawText.replace(/[<>]/g, '');
+					if (!sanitizedText.trim()) break;
+
 					const chatMsg: ChatMessage = {
 						id: crypto.randomUUID(),
 						userId: message.userId,
 						shoberId: message.shoberId,
-						text: message.data.text as string,
+						text: sanitizedText,
 						timestamp: (message.data.timestamp as number) || Date.now()
 					};
-					chatMessages.update((msgs) => [...msgs, chatMsg].slice(-50)); // Keep last 50
+					chatMessages.update((msgs) => [...msgs, chatMsg].slice(-50));
 				}
 				break;
 
@@ -230,9 +235,11 @@ class GardenWebSocket {
 		this.send({ type, shoberId, data });
 	}
 
-	// Send chat message
+	// Send chat message (sanitized)
 	sendChat(text: string) {
-		this.send({ type: 'chat', data: { text } });
+		const sanitized = text.slice(0, 200).replace(/[<>]/g, '').trim();
+		if (!sanitized) return;
+		this.send({ type: 'chat', data: { text: sanitized } });
 	}
 }
 

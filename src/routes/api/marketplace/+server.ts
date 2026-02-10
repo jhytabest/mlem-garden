@@ -74,18 +74,44 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		.bind(...params)
 		.all();
 
-	// Get total count for pagination
+	// Build count query with same filters (without ORDER BY, LIMIT, OFFSET)
 	let countQuery = `
     SELECT COUNT(*) as total
     FROM marketplace_listings ml
     JOIN shobers s ON ml.shober_id = s.id
     WHERE 1=1
   `;
-	// Reuse filter params (without limit/offset)
-	const countParams = params.slice(0, -2);
-	const countResult = await platform.env.DB.prepare(countQuery)
-		.bind(...countParams)
-		.first();
+	const countParams: (string | number)[] = [];
+
+	if (minPrice) {
+		countQuery += ' AND ml.price >= ?';
+		countParams.push(parseInt(minPrice));
+	}
+	if (maxPrice) {
+		countQuery += ' AND ml.price <= ?';
+		countParams.push(parseInt(maxPrice));
+	}
+	if (generation) {
+		countQuery += ' AND s.generation = ?';
+		countParams.push(parseInt(generation));
+	}
+	if (rarity) {
+		const countRarityRanges: Record<string, [number, number]> = {
+			legendary: [300, 999],
+			rare: [150, 299],
+			uncommon: [80, 149],
+			common: [0, 79]
+		};
+		const range = countRarityRanges[rarity];
+		if (range) {
+			countQuery += ' AND s.rarity_score >= ? AND s.rarity_score <= ?';
+			countParams.push(range[0], range[1]);
+		}
+	}
+
+	const countResult = countParams.length > 0
+		? await platform.env.DB.prepare(countQuery).bind(...countParams).first()
+		: await platform.env.DB.prepare(countQuery).first();
 
 	const listings = results.results.map((row) => {
 		const dna = (row.dna as string) || '000000000000000000000000';
