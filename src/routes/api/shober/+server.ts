@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import type { ShoberConfig } from '$lib/shober/types';
+import { generateGen0DNA, decodeDNA, dnaToConfig } from '$lib/shober/dna';
 
 interface CreateShoberRequest {
 	name: string;
@@ -37,25 +38,60 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		.first();
 
 	if (existing) {
-		// Update existing shober
-		await platform.env.DB.prepare(
-			'UPDATE shobers SET name = ?, config = ?, updated_at = ? WHERE user_id = ?'
+		// Update existing shober name and config
+		// Also generate DNA if it's still a placeholder
+		const existingShober = await platform.env.DB.prepare(
+			'SELECT dna FROM shobers WHERE id = ?'
 		)
-			.bind(body.name, JSON.stringify(body.config), now, userId)
-			.run();
+			.bind(existing.id as string)
+			.first();
+
+		const currentDna = existingShober?.dna as string | undefined;
+		const needsDna = !currentDna || currentDna === '000000000000000000000000';
+
+		if (needsDna) {
+			// Retroactively generate DNA for Gen 0 shobers (fixes #4)
+			const dna = generateGen0DNA();
+			const decoded = decodeDNA(dna);
+			const dnaConfig = dnaToConfig(dna);
+
+			await platform.env.DB.prepare(
+				'UPDATE shobers SET name = ?, config = ?, dna = ?, rarity_score = ?, updated_at = ? WHERE user_id = ?'
+			)
+				.bind(body.name, JSON.stringify(dnaConfig), dna, decoded.rarityScore, now, userId)
+				.run();
+		} else {
+			await platform.env.DB.prepare(
+				'UPDATE shobers SET name = ?, config = ?, updated_at = ? WHERE user_id = ?'
+			)
+				.bind(body.name, JSON.stringify(body.config), now, userId)
+				.run();
+		}
 
 		return json({ success: true, id: existing.id, updated: true });
 	} else {
-		// Create new shober with random position in garden
+		// Create new shober with DNA generation (fixes #18)
 		const shoberId = crypto.randomUUID();
-		const positionX = 20 + Math.random() * 60; // 20-80% of garden width
-		const positionY = 40 + Math.random() * 40; // 40-80% of garden height
+		const positionX = 20 + Math.random() * 60;
+		const positionY = 40 + Math.random() * 40;
+
+		const dna = generateGen0DNA();
+		const decoded = decodeDNA(dna);
+		const dnaConfig = dnaToConfig(dna);
 
 		await platform.env.DB.prepare(
-			`INSERT INTO shobers (id, user_id, name, config, position_x, position_y, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+			`INSERT INTO shobers (id, user_id, name, config, dna, generation, rarity_score, position_x, position_y, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?, 1, ?, ?)`
 		)
-			.bind(shoberId, userId, body.name, JSON.stringify(body.config), positionX, positionY, now, now)
+			.bind(shoberId, userId, body.name, JSON.stringify(dnaConfig), dna, decoded.rarityScore, positionX, positionY, now, now)
+			.run();
+
+		// Record ownership history
+		await platform.env.DB.prepare(
+			`INSERT INTO ownership_history (id, shober_id, from_user_id, to_user_id, transfer_type, created_at)
+       VALUES (?, ?, NULL, ?, 'mint', ?)`
+		)
+			.bind(crypto.randomUUID(), shoberId, userId, now)
 			.run();
 
 		return json({ success: true, id: shoberId, created: true });
