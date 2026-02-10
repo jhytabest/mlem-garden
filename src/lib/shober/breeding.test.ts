@@ -157,6 +157,59 @@ describe('Breeding Costs', () => {
 	});
 });
 
+describe('Breeding Mutation Edge Cases', () => {
+	it('breeding two shobers with same DNA produces valid child', () => {
+		const dna = generateRandomDNA();
+		const result = breedShobers(dna, dna, 0, 0);
+
+		expect(result.childDNA).toHaveLength(24);
+		expect(/^[0-9a-f]+$/.test(result.childDNA)).toBe(true);
+		expect(result.childGeneration).toBe(1);
+	});
+
+	it('high-generation breeding still works', () => {
+		const dna1 = generateRandomDNA();
+		const dna2 = generateRandomDNA();
+		const result = breedShobers(dna1, dna2, 99, 100);
+
+		expect(result.childGeneration).toBe(101);
+		expect(result.childDNA).toHaveLength(24);
+	});
+
+	it('mutation flag is boolean', () => {
+		const dna1 = generateRandomDNA();
+		const dna2 = generateRandomDNA();
+
+		for (let i = 0; i < 50; i++) {
+			const result = breedShobers(dna1, dna2, 0, 0);
+			expect(typeof result.inheritedTraits.hasMutation).toBe('boolean');
+		}
+	});
+
+	it('breeding with placeholder DNA produces valid offspring', () => {
+		const placeholder = '000000000000000000000000';
+		const real = generateRandomDNA();
+		const result = breedShobers(placeholder, real, 0, 0);
+
+		expect(result.childDNA).toHaveLength(24);
+		expect(result.childGeneration).toBe(1);
+	});
+
+	it('statistical: mutations occur in breeding over many trials', () => {
+		const dna1 = generateRandomDNA();
+		const dna2 = generateRandomDNA();
+		let mutations = 0;
+
+		for (let i = 0; i < 500; i++) {
+			const result = breedShobers(dna1, dna2, 0, 0);
+			if (result.inheritedTraits.hasMutation) mutations++;
+		}
+
+		// With 5% base mutation chance per gene, expect at least a few
+		expect(mutations).toBeGreaterThan(0);
+	});
+});
+
 describe('Stud Fee Suggestions', () => {
 	it('calculates fee based on rarity', () => {
 		const lowRarity = getSuggestedStudFee(50, 1);
