@@ -1,6 +1,6 @@
 # 🌟 NORTHSTAR — Mlem Garden
 
-*Last updated: 2026-02-09 by Shober (CTO)*
+*Last updated: 2026-02-10 by ShoberclawCTO*
 
 ## Vision
 
@@ -34,7 +34,7 @@ The magic is in the **social loop**: you don't just collect — you *visit*, you
 - ❌ No retention mechanics beyond breeding cooldowns
 - ❌ Shober personality/behavior is static (mood field exists but does nothing meaningful)
 - ❌ No chat in the garden (ChatBox component exists but unclear integration)
-- ❌ Gen 0 DNA placeholder ('000...') never gets retroactively generated
+- ✅ Gen 0 DNA placeholder retroactive fix shipped (#25)
 
 ## Top 3 Priorities
 
