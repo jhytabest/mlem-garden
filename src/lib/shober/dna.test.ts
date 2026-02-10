@@ -161,6 +161,87 @@ describe('Rarity calculations', () => {
 	});
 });
 
+describe('DNA encoding roundtrip edge cases', () => {
+	it('all trait indices round-trip correctly', () => {
+		for (let base = 0; base < BASE_COLORS.length; base++) {
+			for (let eye = 0; eye < EYE_STYLES.length; eye++) {
+				const dna = encodeDNA({
+					baseColorIndex: base,
+					eyeStyleIndex: eye,
+					accessoryIndex: 0,
+					accessoryColorIndex: 0,
+					mutationIndex: 0
+				});
+				const decoded = decodeDNA(dna);
+				expect(decoded.baseColor).toBe(BASE_COLORS[base]);
+				expect(decoded.eyeStyle).toBe(EYE_STYLES[eye]);
+			}
+		}
+	});
+
+	it('all accessory and mutation indices round-trip correctly', () => {
+		for (let acc = 0; acc < ACCESSORIES.length; acc++) {
+			for (let mut = 0; mut < MUTATIONS.length; mut++) {
+				const dna = encodeDNA({
+					baseColorIndex: 0,
+					eyeStyleIndex: 0,
+					accessoryIndex: acc,
+					accessoryColorIndex: 0,
+					mutationIndex: mut
+				});
+				const decoded = decodeDNA(dna);
+				expect(decoded.accessory).toBe(ACCESSORIES[acc]);
+				expect(decoded.mutation).toBe(MUTATIONS[mut]);
+			}
+		}
+	});
+
+	it('all accessory color indices round-trip', () => {
+		for (let i = 0; i < ACCESSORY_COLORS.length; i++) {
+			const dna = encodeDNA({
+				baseColorIndex: 0,
+				eyeStyleIndex: 0,
+				accessoryIndex: 0,
+				accessoryColorIndex: i,
+				mutationIndex: 0
+			});
+			const decoded = decodeDNA(dna);
+			expect(decoded.accessoryColor).toBe(ACCESSORY_COLORS[i]);
+		}
+	});
+
+	it('max index values (255) produce valid traits via modulo', () => {
+		const dna = encodeDNA({
+			baseColorIndex: 255,
+			eyeStyleIndex: 255,
+			accessoryIndex: 255,
+			accessoryColorIndex: 255,
+			mutationIndex: 255
+		});
+		const decoded = decodeDNA(dna);
+		expect(decoded.baseColor).toBe(BASE_COLORS[255 % BASE_COLORS.length]);
+		expect(decoded.eyeStyle).toBe(EYE_STYLES[255 % EYE_STYLES.length]);
+		expect(decoded.accessory).toBe(ACCESSORIES[255 % ACCESSORIES.length]);
+		expect(decoded.mutation).toBe(MUTATIONS[255 % MUTATIONS.length]);
+	});
+
+	it('dnaToConfig always produces valid hex colors', () => {
+		// Test with every base color
+		for (let i = 0; i < BASE_COLORS.length; i++) {
+			const dna = encodeDNA({
+				baseColorIndex: i,
+				eyeStyleIndex: 0,
+				accessoryIndex: 0,
+				accessoryColorIndex: 0,
+				mutationIndex: 0
+			});
+			const config = dnaToConfig(dna);
+			expect(config.baseColor).toMatch(/^#[0-9a-fA-F]{6}$/);
+			expect(config.bellyColor).toMatch(/^#[0-9a-fA-F]{6}$/);
+		}
+	});
+});
+
 describe('Trait definitions', () => {
 	it('all base colors have required properties', () => {
 		for (const color of BASE_COLORS) {
